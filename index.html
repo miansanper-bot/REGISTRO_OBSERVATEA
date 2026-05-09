@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ObservaTEA">
+<meta name="theme-color" content="#4A7FA5">
+<title>ObservaTEA</title>
+<!-- manifest loaded externally for PWA install -->
+<style>
+  :root {
+    --blue: #4A7FA5;
+    --blue-light: #7CA8C8;
+    --blue-dark: #2E5F80;
+    --green: #5A9E7A;
+    --green-light: #E8F5EE;
+    --amber: #D4875A;
+    --amber-light: #FDF0E8;
+    --purple: #8B6BAE;
+    --purple-light: #F0EBF7;
+    --red: #C0504A;
+    --red-light: #FAEAE9;
+    --bg: #F5F2EE;
+    --card: #FFFFFF;
+    --text: #2C3E50;
+    --text-light: #7F8C9A;
+    --text-muted: #AAB4BE;
+    --border: #E0D9D0;
+    --border-focus: #4A7FA5;
+    --shadow: 0 2px 12px rgba(74,127,165,0.10);
+    --shadow-lg: 0 8px 32px rgba(74,127,165,0.18);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --font: 'Georgia', serif;
+    --font-ui: -apple-system, 'Segoe UI', sans-serif;
+    --tab-h: 64px;
+    --header-h: 60px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ─── LAYOUT ─── */
+  #app { display: flex; flex-direction: column; height: 100%; }
+
+  #header {
+    background: var(--blue-dark);
+    color: white;
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 10;
+  }
+
+  #header-logo { font-size: 22px; }
+  #header-title { font-family: var(--font); font-size: 18px; font-weight: normal; letter-spacing: 0.3px; flex: 1; }
+  #header-student { font-size: 12px; opacity: 0.75; font-style: italic; }
+  #header-right { display: flex; gap: 8px; }
+  .header-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    padding: 8px 12px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .header-btn:active { background: rgba(255,255,255,0.3); }
+
+  #content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px;
+    display: none;
+  }
+  .screen.active { display: block; }
+
+  #tabs {
+    background: white;
+    border-top: 1px solid var(--border);
+    height: var(--tab-h);
+    display: flex;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-family: var(--font-ui);
+    transition: color 0.2s;
+    padding: 6px 4px;
+  }
+  .tab .tab-icon { font-size: 22px; line-height: 1; }
+  .tab.active { color: var(--blue); }
+  .tab.active .tab-icon { filter: drop-shadow(0 0 4px rgba(74,127,165,0.4)); }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-family: var(--font);
+    font-size: 16px;
+    color: var(--blue-dark);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── AREA SELECTOR ─── */
+  #area-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .area-card {
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    box-shadow: var(--shadow);
+    border: none;
+    font-family: var(--font-ui);
+    position: relative;
+    overflow: hidden;
+  }
+  .area-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .area-card:active::after { opacity: 1; }
+  .area-card:active { transform: scale(0.97); }
+  .area-card .area-emoji { font-size: 36px; }
+  .area-card .area-name { font-size: 13px; font-weight: 600; text-align: center; line-height: 1.2; }
+  .area-card .area-count { font-size: 11px; opacity: 0.8; }
+
+  /* ─── FORM ─── */
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .form-select, .form-input, .form-textarea {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: var(--font-ui);
+    color: var(--text);
+    background: var(--bg);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-select:focus, .form-input:focus, .form-textarea:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(74,127,165,0.15);
+    background: white;
+  }
+
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    pointer-events: none;
+    font-size: 16px;
+  }
+
+  .form-textarea { min-height: 90px; resize: none; line-height: 1.5; }
+
+  .datetime-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 15px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .btn-primary { background: var(--blue); color: white; }
+  .btn-primary:active { background: var(--blue-dark); }
+  .btn-success { background: var(--green); color: white; }
+  .btn-success:active { background: #48876A; }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-danger:active { background: #A84040; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-light);
+    border: 1.5px solid var(--border);
+  }
+  .btn-ghost:active { background: var(--bg); }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row .btn { flex: 1; }
+
+  /* ─── FAB ─── */
+  #fab {
+    position: fixed;
+    bottom: calc(var(--tab-h) + 16px);
+    right: 16px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: transform 0.2s, background 0.2s;
+  }
+  #fab:active { transform: scale(0.92); background: var(--blue-dark); }
+
+  /* ─── RECORDS ─── */
+  .record-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--blue);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  .record-card:active { box-shadow: var(--shadow-lg); }
+  .record-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .record-area { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+  .record-datetime { font-size: 11px; color: var(--text-muted); text-align: right; }
+  .record-fields { display: flex; flex-wrap: wrap; gap: 6px; }
+  .record-badge {
+    font-size: 11px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    color: var(--text-light);
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .record-obs { font-size: 12px; color: var(--text-light); margin-top: 8px; font-style: italic; }
+
+  /* ─── FILTERS ─── */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-size: 12px;
+    font-family: var(--font-ui);
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-chip.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+  }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .search-bar input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: var(--font-ui);
+    color: var(--text);
+    background: transparent;
+  }
+  .search-bar .search-icon { color: var(--text-muted); font-size: 16px; }
+
+  /* ─── MODAL ─── */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: flex-end;
+    backdrop-filter: blur(4px);
+  }
+  #modal-overlay.show { display: flex; }
+
+  #modal-box {
+    background: white;
+    border-radius: var(--radius) var(--radius) 0 0;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 0 24px;
+    animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+  }
+
+  .modal-title { font-family: var(--font); font-size: 18px; color: var(--blue-dark); flex: 1; }
+  .modal-close {
+    border: none; background: var(--bg); border-radius: 50%;
+    width: 36px; height: 36px; font-size: 18px; cursor: pointer; color: var(--text-light);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .modal-body { padding: 20px; }
+
+  /* ─── SETTINGS ─── */
+  .settings-section { margin-bottom: 20px; }
+  .settings-section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-muted);
+    margin-bottom: 8px; padding: 0 4px;
+  }
+
+  .settings-item {
+    background: white;
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .settings-item:active { border-color: var(--blue); }
+  .settings-item-icon { font-size: 22px; width: 32px; text-align: center; }
+  .settings-item-text { flex: 1; }
+  .settings-item-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .settings-item-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .settings-item-arrow { color: var(--text-muted); font-size: 14px; }
+
+  /* ─── OPTION LIST (for maintenance) ─── */
+  .option-item {
+    background: white;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    box-shadow: var(--shadow);
+  }
+  .option-item-text { flex: 1; font-size: 14px; }
+  .option-item-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    border: none; background: var(--bg); border-radius: 8px;
+    width: 36px; height: 36px; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-light); transition: background 0.15s;
+  }
+  .icon-btn:active { background: var(--border); }
+  .icon-btn.danger { color: var(--red); }
+
+  /* ─── DASHBOARD / STATS ─── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .stat-number { font-size: 32px; font-family: var(--font); color: var(--blue-dark); }
+  .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+  /* ─── TOAST ─── */
+  #toast {
+    position: fixed;
+    bottom: calc(var(--tab-h) + 80px);
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(44,62,80,0.92);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 24px;
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 300;
+    backdrop-filter: blur(8px);
+    white-space: nowrap;
+    max-width: 90vw;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+  }
+  .empty-state .empty-icon { font-size: 52px; margin-bottom: 16px; }
+  .empty-state .empty-title { font-family: var(--font); font-size: 20px; color: var(--text-light); margin-bottom: 8px; }
+  .empty-state .empty-desc { font-size: 14px; line-height: 1.5; }
+
+  /* ─── DATE RANGE ─── */
+  .date-range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ─── PRINT ─── */
+  @media print {
+    #header, #tabs, #fab, #toast, #modal-overlay { display: none !important; }
+    body { overflow: visible; position: static; }
+    #app { height: auto; }
+    #content { overflow: visible; height: auto; }
+    .screen { display: block !important; position: static; overflow: visible; }
+    .record-card { break-inside: avoid; }
+  }
+
+  /* ─── HELPERS ─── */
+  .mt-8 { margin-top: 8px; }
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .mb-16 { margin-bottom: 16px; }
+  .text-center { text-align: center; }
+  .text-muted { color: var(--text-muted); font-size: 13px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--blue-light);
+    color: white;
+  }
+
+  /* Landscape adjustments */
+  @media (orientation: landscape) and (max-height: 500px) {
+    :root { --header-h: 48px; --tab-h: 52px; }
+    .area-card { padding: 14px; }
+    .area-card .area-emoji { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <span id="header-logo">🧩</span>
+    <div>
+      <div id="header-title">ObservaTEA</div>
+      <div id="header-student">Cargando...</div>
+    </div>
+    <div id="header-right">
+      <button class="header-btn" onclick="showExportModal()" title="Exportar">📄</button>
+      <button class="header-btn" onclick="navigate('settings')" title="Ajustes">⚙️</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- HOME: ÁREA SELECTOR -->
+    <div id="screen-home" class="screen active">
+      <div class="card">
+        <div class="card-title">📅 <span id="home-date-display"></span></div>
+        <div class="text-muted" style="margin-top:-6px; margin-bottom:4px;">Selecciona el área para registrar una observación</div>
+      </div>
+      <div id="area-grid"></div>
+      <div id="home-recent"></div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div id="screen-history" class="screen">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Buscar observaciones..." oninput="filterRecords()">
+      </div>
+      <div class="filter-row" id="area-filters"></div>
+      <div class="filter-row" id="sort-filters">
+        <button class="filter-chip active" onclick="setSort('fecha_desc', this)">🕐 Más reciente</button>
+        <button class="filter-chip" onclick="setSort('fecha_asc', this)">🕐 Más antiguo</button>
+        <button class="filter-chip" onclick="setSort('area', this)">📂 Área</button>
+      </div>
+      <div id="records-list"></div>
+    </div>
+
+    <!-- ESTADÍSTICAS -->
+    <div id="screen-stats" class="screen">
+      <div id="stats-content"></div>
+    </div>
+
+    <!-- AJUSTES -->
+    <div id="screen-settings" class="screen">
+      <div class="settings-section">
+        <div class="settings-section-title">Alumna</div>
+        <div class="settings-item" onclick="editStudentInfo()">
+          <span class="settings-item-icon">👤</span>
+          <div class="settings-item-text">
+            <div class="settings-item-title">Datos de la alumna</div>
+            <div class="settings-item-desc" id="student-info-preview">Sin configurar</div>
+          </div>
+          <span class="settings-item-arrow">›</span>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Áreas y Desplegables</div>
+        <div id="areas-settings-list"></div>
+        <div class="settings-item" onclick="createNewArea()" style="border: 2px dashed var(--border); background: var(--bg);">
+          <span class="settings-item-icon">➕</span>
+          <div class="settings-item-text">
+            <div class="settings-item-title" style="color: var(--blue);">Nueva Área</div>
+            <div class="settings-item-desc">Crear un área personalizada</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Datos</div>
+        <div class="settings-item" onclick="showExportModal()">
+          <span class="settings-item-icon">📤</span>
+          <div class="settings-item-text">
+            <div class="settings-item-title">Exportar / Imprimir</div>
+            <div class="settings-item-desc">PDF A4, Excel, rango de fechas</div>
+          </div>
+          <span class="settings-item-arrow">›</span>
+        </div>
+        <div class="settings-item" onclick="backupData()">
+          <span class="settings-item-icon">💾</span>
+          <div class="settings-item-text">
+            <div class="settings-item-title">Copia de seguridad</div>
+            <div class="settings-item-desc">Exportar todos los datos como JSON</div>
+          </div>
+          <span class="settings-item-arrow">›</span>
+        </div>
+        <div class="settings-item" onclick="restoreData()">
+          <span class="settings-item-icon">📥</span>
+          <div class="settings-item-text">
+            <div class="settings-item-title">Restaurar copia</div>
+            <div class="settings-item-desc">Importar datos desde JSON</div>
+          </div>
+          <span class="settings-item-arrow">›</span>
+        </div>
+        <div class="settings-item" onclick="clearAllData()" style="border-color: var(--red-light);">
+          <span class="settings-item-icon">🗑️</span>
+          <div class="settings-item-text">
+            <div class="settings-item-title" style="color:var(--red)">Borrar todos los datos</div>
+            <div class="settings-item-desc">Irreversible. Pide confirmación doble.</div>
+          </div>
+          <span class="settings-item-arrow" style="color:var(--red)">›</span>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Acerca de</div>
+        <div class="card text-center" style="padding: 20px;">
+          <div style="font-size: 40px; margin-bottom: 8px;">🧩</div>
+          <div style="font-family: var(--font); font-size: 20px; color: var(--blue-dark);">ObservaTEA</div>
+          <div class="text-muted mt-8">Sistema de observación para alumnas con TEA</div>
+          <div class="text-muted" style="font-size: 11px; margin-top: 8px;">v1.0 · Basado en metodología TEACCH</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- TAB BAR -->
+  <div id="tabs">
+    <button class="tab active" onclick="navigate('home')" id="tab-home">
+      <span class="tab-icon">🏠</span>
+      <span>Inicio</span>
+    </button>
+    <button class="tab" onclick="navigate('history')" id="tab-history">
+      <span class="tab-icon">📋</span>
+      <span>Historial</span>
+    </button>
+    <button class="tab" onclick="navigate('stats')" id="tab-stats">
+      <span class="tab-icon">📊</span>
+      <span>Estadísticas</span>
+    </button>
+    <button class="tab" onclick="navigate('settings')" id="tab-settings">
+      <span class="tab-icon">⚙️</span>
+      <span>Ajustes</span>
+    </button>
+  </div>
+
+</div><!-- /app -->
+
+<!-- FAB -->
+<button id="fab" onclick="openNewRecord()" title="Nueva observación">＋</button>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL -->
+<div id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div id="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span id="modal-area-emoji" style="font-size:24px"></span>
+      <div id="modal-title" class="modal-title"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- HIDDEN FILE INPUT -->
+<input type="file" id="file-input" accept=".json" style="display:none" onchange="handleFileRestore(event)">
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA LAYER
+// ═══════════════════════════════════════════════════
+
+const DB_KEY = 'observatea_db';
+let db = null;
+
+const DEFAULT_AREAS = {
+  regulacion: {
+    nombre: "Regulación Emocional", emoji: "🧘", color: "#4A7FA5",
+    campos: [
+      { id: "pati", label: "¿PATI presente?", tipo: "select", opciones: ["✅ Sí", "❌ No"] },
+      { id: "nivel_regulacion", label: "Nivel de Regulación", tipo: "select", opciones: [
+        "🌟 5 - ÓPTIMO (Fluida y feliz)",
+        "💚 4 - BIEN (Activa, participativa, tranquila)",
+        "🟡 3 - REGULAR (Corregulación, distraída, inquieta)",
+        "🟠 2 - MUY ANSIOSA (Rigidez, negativa, estereotipias)",
+        "🔴 1 - CRISIS (Llanto, fuga, agresión, autolesión)"
+      ]},
+      { id: "sensorial", label: "Sensorial", tipo: "select", opciones: [
+        "🌟 5 - Autorregulada",
+        "💚 4 - Regulada con apoyo visual",
+        "🟡 3 - Regulada con mucho apoyo (cojín, mordedor...)",
+        "🟠 2 - Sensorial muy alterada",
+        "🔴 1 - Desbordada (crisis sensorial)"
+      ]},
+      { id: "saac", label: "Uso de SAAC", tipo: "select", opciones: [
+        "🌟 5 - ESPONTÁNEO (Inicia comunicación sola)",
+        "💚 4 - AYUDA VERBAL",
+        "🟡 3 - SEÑAL FÍSICA (Le señalas el pictograma)",
+        "🟠 2 - MODELADO (El adulto pulsa primero)",
+        "🔴 1 - NO USA"
+      ]},
+      { id: "causa", label: "Causa / Contexto", tipo: "select", opciones: [
+        "✨ Tema de Interés", "👥 Interacción Social", "🔄 Cambio de Rutina",
+        "🛑 Negativa / Límites", "🥱 Cansancio / Sueño", "🤒 Malestar Físico",
+        "🔊 Estímulo Sensorial", "❓ Sin causa identificada"
+      ]},
+      { id: "espacio", label: "Espacio", tipo: "select", opciones: [
+        "🏫 Aula ordinaria", "🧩 Aula TEA", "🏃 Patio / Recreo",
+        "🎨 Taller / Especialidad", "🚌 Transporte", "🏠 Entrada / Salida"
+      ]},
+      { id: "observaciones", label: "Observaciones", tipo: "texto" }
+    ]
+  },
+  lectoescritura: {
+    nombre: "Lectoescritura", emoji: "📚", color: "#5A9E7A",
+    campos: [
+      { id: "pati", label: "¿PATI presente?", tipo: "select", opciones: ["✅ Sí", "❌ No"] },
+      { id: "actividad", label: "Actividad / Tarea", tipo: "texto_corto" },
+      { id: "tipo_actividad", label: "Tipo de Actividad", tipo: "select", opciones: [
+        "📖 Lectura Global (Pictogramas)", "🔤 Lectura Fonológica",
+        "💡 Comprensión Literal", "🧠 Comprensión Inferencial",
+        "✏️ Escritura (Copia)", "📝 Escritura (Dictado)",
+        "🖊️ Escritura (Espontánea)", "🔡 Conciencia Fonológica", "📚 Vocabulario"
+      ]},
+      { id: "nivel_ejecucion", label: "Nivel de Ejecución", tipo: "select", opciones: [
+        "🌟 Logrado (Comprensivo)", "💚 Logrado (Mecánico)",
+        "🟡 En Progreso (Autocorrección)", "🟠 En Progreso (Con apoyo)",
+        "🔴 No Logrado (Resistencia)", "⬜ No trabajado hoy"
+      ]},
+      { id: "nivel_ayuda", label: "Nivel de Ayuda", tipo: "select", opciones: [
+        "🌟 Autónoma", "💚 Ayuda Gestual", "🟡 Ayuda Verbal",
+        "🟠 Modelado", "🔴 Mano sobre Mano"
+      ]},
+      { id: "conducta", label: "Conducta / Actitud", tipo: "select", opciones: [
+        "😄 Participativa / Motivada", "😐 Tranquila / Pasiva",
+        "😕 Dispersa / Inatenta", "😤 Resistente / Negativa",
+        "😰 Ansiosa / Inquieta", "😊 Colaboradora con apoyo"
+      ]},
+      { id: "observaciones", label: "Observaciones", tipo: "texto" }
+    ]
+  },
+  matematicas: {
+    nombre: "Matemáticas", emoji: "🔢", color: "#C4956A",
+    campos: [
+      { id: "pati", label: "¿PATI presente?", tipo: "select", opciones: ["✅ Sí", "❌ No"] },
+      { id: "concepto", label: "Concepto Trabajado", tipo: "select", opciones: [
+        "🔢 Numeración / Conteo", "➕ Suma sin llevada", "➕ Suma con llevada",
+        "➖ Resta sin llevada", "➖ Resta con llevada", "🔲 Geometría",
+        "📏 Medidas", "🗓️ Tiempo / Calendario", "💰 Dinero / Valor",
+        "📊 Resolución de Problemas"
+      ]},
+      { id: "operativa", label: "Estrategia / Operativa", tipo: "select", opciones: [
+        "🖐️ Conteo con dedos", "📝 Algoritmo escrito", "🧮 Material manipulativo",
+        "🖼️ Apoyo visual / Pictograma", "🧠 Mental (Sin apoyo)", "📱 Tablet / Calculadora"
+      ]},
+      { id: "nivel_ejecucion", label: "Nivel de Ejecución", tipo: "select", opciones: [
+        "🌟 Logrado (Autónoma)", "💚 Logrado (Con apoyo visual)",
+        "🟡 En Progreso (Autocorrección)", "🟠 En Progreso (Necesita guía)",
+        "🔴 No Logrado", "⬜ No trabajado hoy"
+      ]},
+      { id: "nivel_ayuda", label: "Nivel de Ayuda", tipo: "select", opciones: [
+        "🌟 Autónoma", "💚 Ayuda Gestual", "🟡 Ayuda Verbal",
+        "🟠 Modelado", "🔴 Mano sobre Mano"
+      ]},
+      { id: "observaciones", label: "Observaciones", tipo: "texto" }
+    ]
+  },
+  arts: {
+    nombre: "Arts & Crafts", emoji: "🎨", color: "#9B5BA8",
+    campos: [
+      { id: "pati", label: "¿PATI presente?", tipo: "select", opciones: ["✅ Sí", "❌ No"] },
+      { id: "tolerancia_sensorial", label: "Tolerancia Sensorial", tipo: "select", opciones: [
+        "🌟 Disfruta", "💚 Acepta con motivación", "🟡 Tolera (sin disfrute)",
+        "🟠 Rechazo Táctil (Defensividad)", "🔴 Crisis sensorial"
+      ]},
+      { id: "motricidad_fina", label: "Motricidad Fina", tipo: "select", opciones: [
+        "🌟 Funcional Autónoma", "💚 Funcional con supervisión",
+        "🟡 Funcional con ayuda física parcial", "🟠 Requiere ayuda física total",
+        "🔴 No realiza la tarea"
+      ]},
+      { id: "seguimiento", label: "Seguimiento de Instrucciones", tipo: "select", opciones: [
+        "🌟 Secuencia compleja (Autónoma)", "💚 Secuencia simple (Autónoma)",
+        "🟡 Con apoyo visual (Pictogramas/pasos)", "🟠 Con modelado adulto",
+        "🔴 No sigue instrucciones"
+      ]},
+      { id: "observaciones", label: "Observaciones", tipo: "texto" }
+    ]
+  },
+  proyectos: {
+    nombre: "Proyectos", emoji: "🚀", color: "#3A8DBF",
+    campos: [
+      { id: "pati", label: "¿PATI presente?", tipo: "select", opciones: ["✅ Sí", "❌ No"] },
+      { id: "nombre_proyecto", label: "Nombre del Proyecto", tipo: "texto_corto" },
+      { id: "rol", label: "Rol en el Grupo", tipo: "select", opciones: [
+        "🌟 Líder / Iniciadora", "💚 Participante activa",
+        "🟡 Observadora / Imitadora", "🟠 Participante con apoyo constante",
+        "🔴 No participa"
+      ]},
+      { id: "interaccion", label: "Interacción con Iguales", tipo: "select", opciones: [
+        "🌟 Inicia contacto espontáneo", "💚 Responde a compañeros",
+        "🟡 Tolera la proximidad", "🟠 Evita / Ignora",
+        "🔴 Conflicto / Rechazo activo"
+      ]},
+      { id: "nivel_ejecucion", label: "Nivel de Ejecución", tipo: "select", opciones: [
+        "🌟 Logrado (Autónoma)", "💚 Logrado (Con apoyo visual)",
+        "🟡 En Progreso (Autocorrección)", "🟠 En Progreso (Necesita guía)",
+        "🔴 No Logrado", "⬜ No participó hoy"
+      ]},
+      { id: "observaciones", label: "Observaciones", tipo: "texto" }
+    ]
+  }
+};
+
+const DEFAULT_STUDENT = { nombre: "", curso: "", tutor: "" };
+
+function initDB() {
+  const saved = localStorage.getItem(DB_KEY);
+  if (saved) {
+    db = JSON.parse(saved);
+    // Migrate: ensure all default areas exist
+    if (!db.areas) db.areas = JSON.parse(JSON.stringify(DEFAULT_AREAS));
+    Object.keys(DEFAULT_AREAS).forEach(k => {
+      if (!db.areas[k]) db.areas[k] = JSON.parse(JSON.stringify(DEFAULT_AREAS[k]));
+    });
+  } else {
+    db = {
+      student: DEFAULT_STUDENT,
+      areas: JSON.parse(JSON.stringify(DEFAULT_AREAS)),
+      records: [],
+      createdAt: new Date().toISOString()
+    };
+    saveDB();
+    showWelcome();
+  }
+}
+
+function saveDB() {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+}
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+
+let currentScreen = 'home';
+let currentSort = 'fecha_desc';
+let currentAreaFilter = 'all';
+
+function navigate(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  document.getElementById('tab-' + screen)?.classList.add('active');
+  currentScreen = screen;
+
+  const fab = document.getElementById('fab');
+  fab.style.display = (screen === 'home' || screen === 'history') ? 'flex' : 'none';
+
+  if (screen === 'home') renderHome();
+  if (screen === 'history') renderHistory();
+  if (screen === 'stats') renderStats();
+  if (screen === 'settings') renderSettings();
+}
+
+// ═══════════════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════════════
+
+function renderHome() {
+  // Date display
+  const now = new Date();
+  const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+  document.getElementById('home-date-display').textContent =
+    now.toLocaleDateString('es-ES', opts);
+
+  // Student header
+  const name = db.student.nombre || 'Alumna sin configurar';
+  document.getElementById('header-student').textContent = name;
+  document.getElementById('student-info-preview').textContent =
+    db.student.nombre ? `${db.student.nombre} · ${db.student.curso || 'Sin curso'}` : 'Sin configurar';
+
+  // Area grid
+  const grid = document.getElementById('area-grid');
+  grid.innerHTML = '';
+  Object.entries(db.areas).forEach(([id, area]) => {
+    const count = db.records.filter(r => r.areaId === id).length;
+    const btn = document.createElement('button');
+    btn.className = 'area-card';
+    btn.style.background = area.color;
+    btn.innerHTML = `
+      <span class="area-emoji">${area.emoji}</span>
+      <span class="area-name">${area.nombre}</span>
+      <span class="area-count">${count} registro${count !== 1 ? 's' : ''}</span>
+    `;
+    btn.onclick = () => openNewRecord(id);
+    grid.appendChild(btn);
+  });
+
+  // Recent records (last 3)
+  const recent = document.getElementById('home-recent');
+  const last3 = [...db.records].sort((a, b) => b.timestamp - a.timestamp).slice(0, 3);
+  if (last3.length > 0) {
+    recent.innerHTML = `
+      <div class="card-title" style="margin-bottom:8px; color: var(--text-light); font-size:13px; font-family:var(--font-ui);">
+        📋 Registros recientes
+      </div>
+      ${last3.map(r => renderRecordCardHTML(r, true)).join('')}
+    `;
+  } else {
+    recent.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📝</div>
+        <div class="empty-title">Sin registros aún</div>
+        <div class="empty-desc">Pulsa ＋ o selecciona un área para registrar la primera observación.</div>
+      </div>
+    `;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// RECORD FORM
+// ═══════════════════════════════════════════════════
+
+let editingRecordId = null;
+
+function openNewRecord(areaId) {
+  editingRecordId = null;
+  if (!areaId) {
+    // Show area selector
+    showAreaPicker();
+    return;
+  }
+  showRecordForm(areaId, null);
+}
+
+function showAreaPicker() {
+  const body = Object.entries(db.areas).map(([id, area]) => `
+    <button onclick="closeModal(); setTimeout(() => showRecordForm('${id}', null), 100);"
+      style="display:flex; align-items:center; gap:12px; width:100%; background:white;
+             border:1.5px solid var(--border); border-radius:12px; padding:14px;
+             margin-bottom:8px; cursor:pointer; font-size:15px; font-family:var(--font-ui);
+             color:var(--text); text-align:left;">
+      <span style="font-size:28px; width:36px; text-align:center">${area.emoji}</span>
+      <span style="font-weight:600">${area.nombre}</span>
+    </button>
+  `).join('');
+
+  openModal('Seleccionar Área', '📂', body);
+}
+
+function showRecordForm(areaId, record) {
+  const area = db.areas[areaId];
+  if (!area) return;
+
+  const now = new Date();
+  const dateVal = record ? record.fecha : now.toISOString().slice(0, 10);
+  const timeVal = record ? record.hora : now.toTimeString().slice(0, 5);
+
+  let fieldsHTML = `
+    <div class="form-group">
+      <label class="form-label">📅 Fecha y Hora</label>
+      <div class="datetime-row">
+        <input type="date" class="form-input" id="field-fecha" value="${dateVal}">
+        <input type="time" class="form-input" id="field-hora" value="${timeVal}">
+      </div>
+    </div>
+  `;
+
+  area.campos.forEach(campo => {
+    const val = record ? (record.campos[campo.id] || '') : '';
+    if (campo.tipo === 'select') {
+      const options = campo.opciones.map(o =>
+        `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`
+      ).join('');
+      fieldsHTML += `
+        <div class="form-group">
+          <label class="form-label">${campo.label}</label>
+          <div class="select-wrap">
+            <select class="form-select" id="field-${campo.id}">
+              <option value="">— Seleccionar —</option>
+              ${options}
+            </select>
+          </div>
+        </div>
+      `;
+    } else if (campo.tipo === 'texto_corto') {
+      fieldsHTML += `
+        <div class="form-group">
+          <label class="form-label">${campo.label}</label>
+          <input type="text" class="form-input" id="field-${campo.id}" value="${val}" placeholder="Escribe aquí...">
+        </div>
+      `;
+    } else if (campo.tipo === 'texto') {
+      fieldsHTML += `
+        <div class="form-group">
+          <label class="form-label">💬 ${campo.label}</label>
+          <textarea class="form-textarea" id="field-${campo.id}" placeholder="Observaciones adicionales...">${val}</textarea>
+        </div>
+      `;
+    }
+  });
+
+  const actionBtns = record ? `
+    <div class="btn-row mt-16">
+      <button class="btn btn-danger" onclick="deleteRecord('${record.id}')">🗑️ Borrar</button>
+      <button class="btn btn-success" onclick="saveRecord('${areaId}', '${record.id}')">💾 Guardar</button>
+    </div>
+  ` : `
+    <div class="mt-16">
+      <button class="btn btn-success" onclick="saveRecord('${areaId}', null)">✅ Guardar observación</button>
+    </div>
+  `;
+
+  openModal(area.nombre, area.emoji, fieldsHTML + actionBtns);
+}
+
+function saveRecord(areaId, existingId) {
+  const area = db.areas[areaId];
+  const fecha = document.getElementById('field-fecha').value;
+  const hora = document.getElementById('field-hora').value;
+
+  const campos = {};
+  area.campos.forEach(c => {
+    const el = document.getElementById('field-' + c.id);
+    if (el) campos[c.id] = el.value;
+  });
+
+  const record = {
+    id: existingId || genId(),
+    areaId,
+    fecha,
+    hora,
+    timestamp: new Date(fecha + 'T' + hora).getTime(),
+    campos,
+    updatedAt: Date.now()
+  };
+
+  if (existingId) {
+    const idx = db.records.findIndex(r => r.id === existingId);
+    if (idx > -1) db.records[idx] = record;
+  } else {
+    db.records.push(record);
+  }
+
+  saveDB();
+  closeModal();
+  showToast(existingId ? '✏️ Registro actualizado' : '✅ Observación guardada');
+
+  if (currentScreen === 'history') renderHistory();
+  if (currentScreen === 'home') renderHome();
+}
+
+function deleteRecord(recordId) {
+  if (!confirm('¿Borrar este registro? Esta acción no se puede deshacer.')) return;
+  db.records = db.records.filter(r => r.id !== recordId);
+  saveDB();
+  closeModal();
+  showToast('🗑️ Registro eliminado');
+  if (currentScreen === 'history') renderHistory();
+  if (currentScreen === 'home') renderHome();
+}
+
+function editRecord(recordId) {
+  const record = db.records.find(r => r.id === recordId);
+  if (!record) return;
+  showRecordForm(record.areaId, record);
+}
+
+// ═══════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════
+
+function renderHistory() {
+  // Area filters
+  const filtersEl = document.getElementById('area-filters');
+  filtersEl.innerHTML = `
+    <button class="filter-chip ${currentAreaFilter === 'all' ? 'active' : ''}"
+      onclick="setAreaFilter('all', this)">Todas</button>
+    ${Object.entries(db.areas).map(([id, a]) =>
+      `<button class="filter-chip ${currentAreaFilter === id ? 'active' : ''}"
+        onclick="setAreaFilter('${id}', this)">${a.emoji} ${a.nombre}</button>`
+    ).join('')}
+  `;
+
+  filterRecords();
+}
+
+function filterRecords() {
+  const query = document.getElementById('search-input')?.value.toLowerCase() || '';
+  let records = [...db.records];
+
+  if (currentAreaFilter !== 'all') {
+    records = records.filter(r => r.areaId === currentAreaFilter);
+  }
+
+  if (query) {
+    records = records.filter(r => {
+      const area = db.areas[r.areaId];
+      const areaName = area ? area.nombre.toLowerCase() : '';
+      const fieldsText = Object.values(r.campos).join(' ').toLowerCase();
+      return areaName.includes(query) || fieldsText.includes(query) ||
+             r.fecha.includes(query) || r.hora.includes(query);
+    });
+  }
+
+  // Sort
+  if (currentSort === 'fecha_desc') records.sort((a, b) => b.timestamp - a.timestamp);
+  else if (currentSort === 'fecha_asc') records.sort((a, b) => a.timestamp - b.timestamp);
+  else if (currentSort === 'area') records.sort((a, b) => a.areaId.localeCompare(b.areaId));
+
+  const list = document.getElementById('records-list');
+  if (records.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">Sin resultados</div>
+        <div class="empty-desc">Prueba con otros filtros o busca por área, fecha u observaciones.</div>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = records.map(r => renderRecordCardHTML(r, false)).join('');
+}
+
+function renderRecordCardHTML(record, compact) {
+  const area = db.areas[record.areaId];
+  if (!area) return '';
+
+  const displayDate = new Date(record.fecha + 'T12:00:00').toLocaleDateString('es-ES', {
+    weekday: 'short', day: 'numeric', month: 'short'
+  });
+
+  const badges = Object.entries(record.campos)
+    .filter(([k, v]) => v && k !== 'observaciones' && k !== 'actividad' && k !== 'nombre_proyecto')
+    .slice(0, compact ? 2 : 6)
+    .map(([k, v]) => `<span class="record-badge">${v}</span>`)
+    .join('');
+
+  const obsField = area.campos.find(c => c.id === 'observaciones');
+  const obs = record.campos.observaciones;
+
+  return `
+    <div class="record-card" style="border-left-color: ${area.color}" onclick="editRecord('${record.id}')">
+      <div class="record-header">
+        <div class="record-area" style="color:${area.color}">${area.emoji} ${area.nombre}</div>
+        <div class="record-datetime">
+          <div>${displayDate}</div>
+          <div>${record.hora}</div>
+        </div>
+      </div>
+      <div class="record-fields">${badges}</div>
+      ${obs && !compact ? `<div class="record-obs">💬 ${obs}</div>` : ''}
+    </div>
+  `;
+}
+
+function setAreaFilter(id, el) {
+  currentAreaFilter = id;
+  document.querySelectorAll('#area-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  filterRecords();
+}
+
+function setSort(sort, el) {
+  currentSort = sort;
+  document.querySelectorAll('#sort-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  filterRecords();
+}
+
+// ═══════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════
+
+function renderStats() {
+  const total = db.records.length;
+  const areas = Object.keys(db.areas);
+  const thisWeek = db.records.filter(r => {
+    const d = new Date(r.fecha);
+    const now = new Date();
+    const diff = (now - d) / 86400000;
+    return diff <= 7;
+  }).length;
+
+  let areaStats = Object.entries(db.areas).map(([id, area]) => {
+    const count = db.records.filter(r => r.areaId === id).length;
+    return { id, area, count };
+  }).sort((a, b) => b.count - a.count);
+
+  // Last 7 days calendar
+  const last7 = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const count = db.records.filter(r => r.fecha === dateStr).length;
+    last7.push({ date: d, count });
+  }
+
+  const maxDay = Math.max(...last7.map(d => d.count), 1);
+
+  document.getElementById('stats-content').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-number">${total}</div>
+        <div class="stat-label">Total registros</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${thisWeek}</div>
+        <div class="stat-label">Esta semana</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📅 Últimos 7 días</div>
+      <div style="display:flex; align-items:flex-end; gap:8px; height:80px; margin-top:8px;">
+        ${last7.map(d => {
+          const h = Math.max(4, Math.round((d.count / maxDay) * 70));
+          const day = d.date.toLocaleDateString('es-ES', { weekday: 'short' });
+          const isToday = d.date.toDateString() === new Date().toDateString();
+          return `
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;">
+              <div style="width:100%; height:${h}px; background:${isToday ? 'var(--blue)' : 'var(--blue-light)'};
+                border-radius:4px; transition:height 0.3s;"></div>
+              <div style="font-size:10px; color:var(--text-muted); ${isToday ? 'font-weight:700;color:var(--blue)' : ''}">${day}</div>
+              ${d.count > 0 ? `<div style="font-size:10px; color:var(--blue-dark); font-weight:700">${d.count}</div>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📂 Por área</div>
+      ${areaStats.map(({ id, area, count }) => {
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+        return `
+          <div style="margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px;">
+              <span>${area.emoji} ${area.nombre}</span>
+              <span style="color:var(--text-light)">${count} (${pct}%)</span>
+            </div>
+            <div style="background:var(--bg); border-radius:4px; height:8px; overflow:hidden;">
+              <div style="width:${pct}%; height:100%; background:${area.color}; border-radius:4px; transition:width 0.5s;"></div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧘 Regulación: tendencia</div>
+      ${renderRegulationTrend()}
+    </div>
+  `;
+}
+
+function renderRegulationTrend() {
+  const regRecords = db.records
+    .filter(r => r.areaId === 'regulacion' && r.campos.nivel_regulacion)
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .slice(-10);
+
+  if (regRecords.length === 0) {
+    return `<div class="text-muted text-center" style="padding:16px">Sin datos de regulación aún</div>`;
+  }
+
+  const levels = {
+    '1': { color: '#C0504A', label: '1-Crisis' },
+    '2': { color: '#D4875A', label: '2-Ansiosa' },
+    '3': { color: '#D4C54A', label: '3-Regular' },
+    '4': { color: '#5A9E7A', label: '4-Bien' },
+    '5': { color: '#4A7FA5', label: '5-Óptimo' },
+  };
+
+  return regRecords.map(r => {
+    const val = r.campos.nivel_regulacion;
+    const levelNum = val.match(/(\d+)/)?.[1] || '3';
+    const lv = levels[levelNum] || levels['3'];
+    const date = new Date(r.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    return `
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+        <div style="width:60px; font-size:11px; color:var(--text-muted)">${date}</div>
+        <div style="flex:1; background:var(--bg); border-radius:4px; height:20px; overflow:hidden;">
+          <div style="width:${(parseInt(levelNum)/5)*100}%; height:100%; background:${lv.color};
+            border-radius:4px; display:flex; align-items:center; padding-left:8px;
+            font-size:10px; color:white; font-weight:700; transition:width 0.4s;">
+            ${lv.label}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════
+
+function renderSettings() {
+  const name = db.student.nombre;
+  document.getElementById('student-info-preview').textContent =
+    name ? `${name} · ${db.student.curso || 'Sin curso'}` : 'Sin configurar';
+
+  const list = document.getElementById('areas-settings-list');
+  list.innerHTML = Object.entries(db.areas).map(([id, area]) => `
+    <div class="settings-item" onclick="manageArea('${id}')">
+      <span class="settings-item-icon">${area.emoji}</span>
+      <div class="settings-item-text">
+        <div class="settings-item-title">${area.nombre}</div>
+        <div class="settings-item-desc">${area.campos.length} campos · ${db.records.filter(r=>r.areaId===id).length} registros</div>
+      </div>
+      <span class="settings-item-arrow">›</span>
+    </div>
+  `).join('');
+}
+
+function editStudentInfo() {
+  const s = db.student;
+  const body = `
+    <div class="form-group">
+      <label class="form-label">Nombre de la alumna</label>
+      <input type="text" class="form-input" id="s-nombre" value="${s.nombre}" placeholder="Nombre completo">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Curso / Grupo</label>
+      <input type="text" class="form-input" id="s-curso" value="${s.curso}" placeholder="Ej: 3º Primaria">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tutor/a de referencia</label>
+      <input type="text" class="form-input" id="s-tutor" value="${s.tutor}" placeholder="Nombre del tutor/a">
+    </div>
+    <div class="mt-16">
+      <button class="btn btn-primary" onclick="saveStudentInfo()">💾 Guardar</button>
+    </div>
+  `;
+  openModal('Datos de la Alumna', '👤', body);
+}
+
+function saveStudentInfo() {
+  db.student.nombre = document.getElementById('s-nombre').value.trim();
+  db.student.curso = document.getElementById('s-curso').value.trim();
+  db.student.tutor = document.getElementById('s-tutor').value.trim();
+  saveDB();
+  closeModal();
+  renderSettings();
+  renderHome();
+  showToast('✅ Datos guardados');
+}
+
+// ─── AREA MANAGEMENT ───
+
+function manageArea(areaId) {
+  const area = db.areas[areaId];
+  const isDefault = DEFAULT_AREAS[areaId] !== undefined;
+
+  const body = `
+    <div class="form-group">
+      <label class="form-label">Nombre del área</label>
+      <input type="text" class="form-input" id="area-nombre" value="${area.nombre}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji</label>
+      <input type="text" class="form-input" id="area-emoji" value="${area.emoji}" style="font-size:24px">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color</label>
+      <input type="color" class="form-input" id="area-color" value="${area.color}" style="height:50px; padding:4px">
+    </div>
+    <div class="divider"></div>
+    <div class="card-title" style="margin-bottom:12px">Campos y desplegables</div>
+    <div id="campos-list">
+      ${area.campos.map((c, i) => renderCampoItem(c, i, areaId)).join('')}
+    </div>
+    <button class="btn btn-ghost mt-8" onclick="addCampo('${areaId}')">➕ Añadir campo</button>
+    <div class="divider"></div>
+    <div class="btn-row">
+      ${!isDefault || db.records.filter(r=>r.areaId===areaId).length===0 ?
+        `<button class="btn btn-danger" onclick="deleteArea('${areaId}')">🗑️ Eliminar área</button>` : ''}
+      <button class="btn btn-primary" onclick="saveAreaMeta('${areaId}')">💾 Guardar</button>
+    </div>
+  `;
+  openModal('Gestionar: ' + area.nombre, area.emoji, body);
+}
+
+function renderCampoItem(campo, idx, areaId) {
+  return `
+    <div class="option-item" id="campo-item-${idx}">
+      <div class="option-item-text">
+        <div style="font-weight:600; font-size:13px">${campo.label}</div>
+        <div style="font-size:11px; color:var(--text-muted)">${campo.tipo === 'select' ? campo.opciones.length + ' opciones' : campo.tipo}</div>
+      </div>
+      <div class="option-item-actions">
+        ${campo.tipo === 'select' ? `<button class="icon-btn" onclick="editCampoOpciones('${areaId}', ${idx})">⚙️</button>` : ''}
+        ${campo.id !== 'observaciones' ? `<button class="icon-btn danger" onclick="deleteCampo('${areaId}', ${idx})">🗑️</button>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function editCampoOpciones(areaId, campoIdx) {
+  const campo = db.areas[areaId].campos[campoIdx];
+  const body = `
+    <div style="margin-bottom:12px; font-weight:600">${campo.label}</div>
+    <div id="opciones-list">
+      ${campo.opciones.map((o, i) => `
+        <div class="option-item">
+          <span class="option-item-text" style="font-size:14px">${o}</span>
+          <div class="option-item-actions">
+            <button class="icon-btn" onclick="editOpcion('${areaId}', ${campoIdx}, ${i})">✏️</button>
+            <button class="icon-btn danger" onclick="deleteOpcion('${areaId}', ${campoIdx}, ${i})">🗑️</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="form-group mt-12">
+      <label class="form-label">Nueva opción</label>
+      <div style="display:flex; gap:8px">
+        <input type="text" class="form-input" id="new-opcion-input" placeholder="Ej: 💛 Nueva opción">
+        <button class="btn btn-primary" style="width:auto; padding: 13px 16px"
+          onclick="addOpcion('${areaId}', ${campoIdx})">➕</button>
+      </div>
+    </div>
+    <button class="btn btn-ghost mt-8" onclick="manageArea('${areaId}')">← Volver</button>
+  `;
+  openModal('Opciones: ' + campo.label, '⚙️', body);
+}
+
+function addOpcion(areaId, campoIdx) {
+  const input = document.getElementById('new-opcion-input');
+  const val = input.value.trim();
+  if (!val) return;
+  db.areas[areaId].campos[campoIdx].opciones.push(val);
+  saveDB();
+  input.value = '';
+  editCampoOpciones(areaId, campoIdx);
+  showToast('➕ Opción añadida');
+}
+
+function editOpcion(areaId, campoIdx, optIdx) {
+  const val = db.areas[areaId].campos[campoIdx].opciones[optIdx];
+  const newVal = prompt('Editar opción:', val);
+  if (newVal && newVal.trim()) {
+    db.areas[areaId].campos[campoIdx].opciones[optIdx] = newVal.trim();
+    saveDB();
+    editCampoOpciones(areaId, campoIdx);
+    showToast('✏️ Opción actualizada');
+  }
+}
+
+function deleteOpcion(areaId, campoIdx, optIdx) {
+  if (!confirm('¿Eliminar esta opción?')) return;
+  db.areas[areaId].campos[campoIdx].opciones.splice(optIdx, 1);
+  saveDB();
+  editCampoOpciones(areaId, campoIdx);
+  showToast('🗑️ Opción eliminada');
+}
+
+function deleteCampo(areaId, campoIdx) {
+  if (!confirm('¿Eliminar este campo? Los registros existentes no se verán afectados.')) return;
+  db.areas[areaId].campos.splice(campoIdx, 1);
+  saveDB();
+  manageArea(areaId);
+  showToast('🗑️ Campo eliminado');
+}
+
+function addCampo(areaId) {
+  const body = `
+    <div class="form-group">
+      <label class="form-label">Nombre del campo</label>
+      <input type="text" class="form-input" id="nc-label" placeholder="Ej: Nivel de atención">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo</label>
+      <div class="select-wrap">
+        <select class="form-select" id="nc-tipo">
+          <option value="select">Desplegable (opciones)</option>
+          <option value="texto_corto">Texto corto (libre)</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row mt-16">
+      <button class="btn btn-ghost" onclick="manageArea('${areaId}')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNewCampo('${areaId}')">Añadir campo</button>
+    </div>
+  `;
+  openModal('Nuevo campo', '➕', body);
+}
+
+function saveNewCampo(areaId) {
+  const label = document.getElementById('nc-label').value.trim();
+  const tipo = document.getElementById('nc-tipo').value;
+  if (!label) { showToast('⚠️ Escribe un nombre'); return; }
+
+  const id = label.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20) + '_' + genId();
+  const campo = { id, label, tipo, opciones: tipo === 'select' ? ['Opción 1', 'Opción 2'] : undefined };
+  if (tipo !== 'select') delete campo.opciones;
+
+  // Insert before "observaciones"
+  const obsIdx = db.areas[areaId].campos.findIndex(c => c.id === 'observaciones');
+  if (obsIdx > -1) {
+    db.areas[areaId].campos.splice(obsIdx, 0, campo);
+  } else {
+    db.areas[areaId].campos.push(campo);
+  }
+  saveDB();
+  manageArea(areaId);
+  showToast('✅ Campo añadido');
+}
+
+function saveAreaMeta(areaId) {
+  db.areas[areaId].nombre = document.getElementById('area-nombre').value.trim() || db.areas[areaId].nombre;
+  db.areas[areaId].emoji = document.getElementById('area-emoji').value.trim() || db.areas[areaId].emoji;
+  db.areas[areaId].color = document.getElementById('area-color').value;
+  saveDB();
+  closeModal();
+  renderSettings();
+  renderHome();
+  showToast('✅ Área actualizada');
+}
+
+function deleteArea(areaId) {
+  const count = db.records.filter(r => r.areaId === areaId).length;
+  const msg = count > 0
+    ? `⚠️ Esta área tiene ${count} registros. ¿Borrar área Y sus registros?`
+    : '¿Eliminar esta área?';
+  if (!confirm(msg)) return;
+  delete db.areas[areaId];
+  db.records = db.records.filter(r => r.areaId !== areaId);
+  saveDB();
+  closeModal();
+  renderSettings();
+  renderHome();
+  showToast('🗑️ Área eliminada');
+}
+
+function createNewArea() {
+  const id = 'area_' + genId();
+  const body = `
+    <div class="form-group">
+      <label class="form-label">Nombre del área</label>
+      <input type="text" class="form-input" id="na-nombre" placeholder="Ej: Habilidades Sociales">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji representativo</label>
+      <input type="text" class="form-input" id="na-emoji" placeholder="🌟" style="font-size:24px">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color</label>
+      <input type="color" class="form-input" id="na-color" value="#4A7FA5" style="height:50px; padding:4px">
+    </div>
+    <div class="mt-16">
+      <button class="btn btn-primary" onclick="saveNewArea('${id}')">✅ Crear área</button>
+    </div>
+  `;
+  openModal('Nueva Área', '➕', body);
+}
+
+function saveNewArea(id) {
+  const nombre = document.getElementById('na-nombre').value.trim();
+  if (!nombre) { showToast('⚠️ Escribe un nombre'); return; }
+  const emoji = document.getElementById('na-emoji').value.trim() || '📋';
+  const color = document.getElementById('na-color').value;
+
+  db.areas[id] = {
+    nombre, emoji, color,
+    campos: [
+      { id: "pati", label: "¿PATI presente?", tipo: "select", opciones: ["✅ Sí", "❌ No"] },
+      { id: "nivel_ejecucion", label: "Nivel de Ejecución", tipo: "select", opciones: [
+        "🌟 Logrado (Autónoma)", "💚 Logrado (Con apoyo visual)",
+        "🟡 En Progreso (Autocorrección)", "🟠 En Progreso (Necesita guía)",
+        "🔴 No Logrado"
+      ]},
+      { id: "nivel_ayuda", label: "Nivel de Ayuda", tipo: "select", opciones: [
+        "🌟 Autónoma", "💚 Ayuda Gestual", "🟡 Ayuda Verbal", "🟠 Modelado", "🔴 Mano sobre Mano"
+      ]},
+      { id: "conducta", label: "Conducta / Actitud", tipo: "select", opciones: [
+        "😄 Participativa / Motivada", "😐 Tranquila / Pasiva",
+        "😕 Dispersa / Inatenta", "😤 Resistente / Negativa", "😰 Ansiosa / Inquieta"
+      ]},
+      { id: "observaciones", label: "Observaciones", tipo: "texto" }
+    ]
+  };
+  saveDB();
+  closeModal();
+  renderSettings();
+  renderHome();
+  showToast('✅ Área creada');
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT / PDF
+// ═══════════════════════════════════════════════════
+
+function showExportModal() {
+  const today = new Date().toISOString().slice(0, 10);
+  const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+
+  const body = `
+    <div class="form-group">
+      <label class="form-label">Rango de fechas</label>
+      <div class="date-range-row">
+        <div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px">Desde</div>
+          <input type="date" class="form-input" id="exp-from" value="${monthAgo}">
+        </div>
+        <div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:4px">Hasta</div>
+          <input type="date" class="form-input" id="exp-to" value="${today}">
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Área</label>
+      <div class="select-wrap">
+        <select class="form-select" id="exp-area">
+          <option value="all">Todas las áreas</option>
+          ${Object.entries(db.areas).map(([id, a]) =>
+            `<option value="${id}">${a.emoji} ${a.nombre}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ordenar por</label>
+      <div class="select-wrap">
+        <select class="form-select" id="exp-sort">
+          <option value="fecha_desc">Fecha (más reciente primero)</option>
+          <option value="fecha_asc">Fecha (más antiguo primero)</option>
+          <option value="area">Área</option>
+        </select>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="printReport()">🖨️ Imprimir / PDF A4</button>
+    </div>
+    <button class="btn btn-ghost mt-8" onclick="exportExcel()">📊 Exportar Excel (CSV)</button>
+  `;
+  openModal('Exportar Registros', '📄', body);
+}
+
+function printReport() {
+  const from = document.getElementById('exp-from').value;
+  const to = document.getElementById('exp-to').value;
+  const areaFilter = document.getElementById('exp-area').value;
+  const sort = document.getElementById('exp-sort').value;
+
+  let records = db.records.filter(r => r.fecha >= from && r.fecha <= to);
+  if (areaFilter !== 'all') records = records.filter(r => r.areaId === areaFilter);
+
+  if (sort === 'fecha_desc') records.sort((a, b) => b.timestamp - a.timestamp);
+  else if (sort === 'fecha_asc') records.sort((a, b) => a.timestamp - b.timestamp);
+  else records.sort((a, b) => a.areaId.localeCompare(b.areaId));
+
+  const studentName = db.student.nombre || 'Alumna';
+  const curso = db.student.curso || '';
+
+  const rows = records.map(r => {
+    const area = db.areas[r.areaId];
+    const date = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-ES');
+    const campos = area.campos
+      .filter(c => c.id !== 'observaciones')
+      .map(c => `<td style="padding:6px 8px; border:1px solid #ddd; font-size:11px">${r.campos[c.id] || '—'}</td>`)
+      .join('');
+    const obs = r.campos.observaciones || '';
+    return `
+      <tr>
+        <td style="padding:6px 8px; border:1px solid #ddd; font-size:11px; white-space:nowrap">${date}</td>
+        <td style="padding:6px 8px; border:1px solid #ddd; font-size:11px; white-space:nowrap">${r.hora}</td>
+        <td style="padding:6px 8px; border:1px solid #ddd; font-size:11px">${area.emoji} ${area.nombre}</td>
+        ${campos}
+        <td style="padding:6px 8px; border:1px solid #ddd; font-size:11px; font-style:italic">${obs}</td>
+      </tr>
+    `;
+  }).join('');
+
+  // Group headers by area for multi-area
+  const allAreas = [...new Set(records.map(r => r.areaId))];
+  let content = '';
+
+  if (areaFilter === 'all') {
+    // One section per area
+    allAreas.forEach(areaId => {
+      const area = db.areas[areaId];
+      const areaRecords = records.filter(r => r.areaId === areaId);
+      const headers = ['Fecha', 'Hora', ...area.campos.filter(c=>c.id!=='observaciones').map(c=>c.label), 'Observaciones'];
+      content += `
+        <h3 style="color:#2E5F80; margin:20px 0 8px; font-size:14px">${area.emoji} ${area.nombre} (${areaRecords.length} registros)</h3>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:11px">
+          <thead>
+            <tr style="background:#4A7FA5; color:white">
+              ${headers.map(h => `<th style="padding:7px 8px; text-align:left; font-size:11px">${h}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${areaRecords.map(r => {
+              const date = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-ES');
+              const campos = area.campos.filter(c=>c.id!=='observaciones')
+                .map(c=>`<td style="padding:6px 8px;border:1px solid #ddd;font-size:11px">${r.campos[c.id]||'—'}</td>`).join('');
+              return `<tr><td style="padding:6px 8px;border:1px solid #ddd;font-size:11px">${date}</td>
+                <td style="padding:6px 8px;border:1px solid #ddd;font-size:11px">${r.hora}</td>
+                ${campos}
+                <td style="padding:6px 8px;border:1px solid #ddd;font-size:11px;font-style:italic">${r.campos.observaciones||''}</td></tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    });
+  } else {
+    const area = db.areas[areaFilter];
+    const headers = ['Fecha', 'Hora', ...area.campos.filter(c=>c.id!=='observaciones').map(c=>c.label), 'Observaciones'];
+    content = `
+      <table style="width:100%; border-collapse:collapse; font-size:11px">
+        <thead>
+          <tr style="background:#4A7FA5; color:white">
+            ${headers.map(h=>`<th style="padding:7px 8px; text-align:left">${h}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  const fromD = new Date(from + 'T12:00:00').toLocaleDateString('es-ES');
+  const toD = new Date(to + 'T12:00:00').toLocaleDateString('es-ES');
+
+  const printHTML = '<!DOCTYPE html>'
+    + '<html lang="es"><head><meta charset="UTF-8">'
+    + '<title>ObservaTEA - ' + studentName + '</title>'
+    + '<style>'
+    + '@page { size: A4; margin: 15mm 12mm; }'
+    + 'body { font-family: Helvetica Neue, Arial, sans-serif; color: #2C3E50; }'
+    + 'h1 { font-size: 20px; color: #2E5F80; margin-bottom: 4px; }'
+    + '.subtitle { font-size: 12px; color: #7F8C9A; margin-bottom: 20px; }'
+    + 'table { page-break-inside: auto; width: 100%; border-collapse: collapse; }'
+    + 'tr { page-break-inside: avoid; }'
+    + 'th { background: #4A7FA5; color: white; padding: 7px 8px; text-align: left; font-size: 11px; }'
+    + 'td { padding: 6px 8px; border: 1px solid #ddd; font-size: 11px; }'
+    + 'h3 { color: #2E5F80; margin: 20px 0 8px; font-size: 14px; }'
+    + '@media print { * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }'
+    + '</style>'
+    + '</head><body>'
+    + '<h1>🧩 ObservaTEA — ' + studentName + '</h1>'
+    + '<div class="subtitle">'
+    + (curso ? 'Curso: ' + curso + ' · ' : '')
+    + 'Período: ' + fromD + ' – ' + toD + ' · '
+    + records.length + ' registros · '
+    + 'Generado: ' + new Date().toLocaleDateString('es-ES')
+    + '</div>'
+    + content
+    + '</body></html>';
+
+  const win = window.open('', '_blank');
+  win.document.write(printHTML);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 500);
+}
+
+function exportExcel() {
+  const from = document.getElementById('exp-from').value;
+  const to = document.getElementById('exp-to').value;
+  const areaFilter = document.getElementById('exp-area').value;
+
+  let records = db.records.filter(r => r.fecha >= from && r.fecha <= to);
+  if (areaFilter !== 'all') records = records.filter(r => r.areaId === areaFilter);
+  records.sort((a, b) => a.timestamp - b.timestamp);
+
+  const rows = [['Fecha', 'Hora', 'Área']];
+  // Dynamic headers (union of all fields)
+  const allFieldIds = new Set();
+  records.forEach(r => {
+    const area = db.areas[r.areaId];
+    if (area) area.campos.forEach(c => allFieldIds.add(c.id));
+  });
+  const fieldIds = [...allFieldIds];
+  const fieldLabels = {};
+  fieldIds.forEach(id => {
+    Object.values(db.areas).forEach(area => {
+      const campo = area.campos.find(c => c.id === id);
+      if (campo) fieldLabels[id] = campo.label;
+    });
+  });
+  rows[0].push(...fieldIds.map(id => fieldLabels[id] || id));
+
+  records.forEach(r => {
+    const area = db.areas[r.areaId];
+    const row = [r.fecha, r.hora, area ? area.nombre : r.areaId];
+    fieldIds.forEach(id => row.push(r.campos[id] || ''));
+    rows.push(row);
+  });
+
+  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ObservaTEA_${db.student.nombre || 'alumna'}_${from}_${to}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('📊 CSV exportado');
+}
+
+// ═══════════════════════════════════════════════════
+// BACKUP / RESTORE
+// ═══════════════════════════════════════════════════
+
+function backupData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `observatea_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('💾 Copia guardada');
+}
+
+function restoreData() {
+  if (!confirm('⚠️ Esto reemplazará TODOS los datos actuales. ¿Continuar?')) return;
+  document.getElementById('file-input').click();
+}
+
+function handleFileRestore(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const restored = JSON.parse(e.target.result);
+      if (!restored.records || !restored.areas) throw new Error('Formato inválido');
+      db = restored;
+      saveDB();
+      renderHome();
+      renderSettings();
+      showToast('✅ Datos restaurados');
+    } catch (err) {
+      alert('❌ Archivo no válido: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearAllData() {
+  if (!confirm('⚠️ BORRAR TODO: esta acción eliminará todos los registros y no puede deshacerse.')) return;
+  if (!confirm('¿Seguro? Se borrarán ' + db.records.length + ' registros permanentemente.')) return;
+  db.records = [];
+  saveDB();
+  renderHome();
+  renderHistory();
+  showToast('🗑️ Todos los datos borrados');
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL SYSTEM
+// ═══════════════════════════════════════════════════
+
+function openModal(title, emoji, bodyHTML) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-area-emoji').textContent = emoji;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+function closeModalOnOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════════
+// WELCOME (first launch)
+// ═══════════════════════════════════════════════════
+
+function showWelcome() {
+  setTimeout(() => {
+    const body = `
+      <div class="text-center" style="padding: 8px 0">
+        <div style="font-size: 60px; margin-bottom: 16px">🧩</div>
+        <div style="font-family: var(--font); font-size: 22px; color: var(--blue-dark); margin-bottom: 8px">
+          Bienvenida a ObservaTEA
+        </div>
+        <div class="text-muted" style="margin-bottom: 24px; line-height: 1.6">
+          Sistema de observación pedagógica para alumnas con TEA.<br>
+          Para empezar, configura los datos de la alumna.
+        </div>
+        <button class="btn btn-primary" onclick="closeModal(); editStudentInfo()">
+          👤 Configurar alumna
+        </button>
+        <button class="btn btn-ghost mt-8" onclick="closeModal()">
+          Ahora no
+        </button>
+      </div>
+    `;
+    openModal('Primera vez', '👋', body);
+  }, 400);
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  initDB();
+  renderHome();
+
+  // Prevent scroll bounce on iOS
+  document.addEventListener('touchmove', (e) => {
+    if (e.target.closest('.screen') || e.target.closest('#modal-box')) return;
+    e.preventDefault();
+  }, { passive: false });
+
+  // Install PWA prompt
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Could show install button here
+  });
+});
+</script>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+</script>
+</body>
+</html>
