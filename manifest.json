@@ -4,7 +4,7 @@
   "description": "Sistema de observación pedagógica para alumnas con TEA",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#F5F2EE",
+  "background_color": "#4A7FA5",
   "theme_color": "#4A7FA5",
   "orientation": "any",
   "icons": [
@@ -19,9 +19,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ], 
-  "categories": ["education", "medical"],
-  "lang": "es",
-  "dir": "ltr"
+  ]
 }
